@@ -38,4 +38,8 @@ public class Member {
         this.profileImage = profileImage;
         return this;
     }
+
+    public boolean isEligible() {
+        return this.role == Role.USER;
+    }
 }
