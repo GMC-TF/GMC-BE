@@ -2,6 +2,7 @@ package com.gmc.backend.config;
 
 import com.gmc.backend.auth.jwt.JwtAuthenticationFilter;
 import com.gmc.backend.auth.jwt.JwtTokenProvider;
+import com.gmc.backend.auth.jwt.TokenBlacklist;
 import com.gmc.backend.auth.oauth2.CustomOAuth2UserService;
 import com.gmc.backend.auth.oauth2.OAuth2SuccessHandler;
 import com.gmc.backend.common.exception.ErrorCode;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final CustomOAuth2UserService customOAuth2UserService;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklist tokenBlacklist;
     private final ObjectMapper objectMapper;
 
     @Bean
@@ -59,7 +61,7 @@ public class SecurityConfig {
                         .successHandler(oAuth2SuccessHandler)
                 )
                 .addFilterBefore(
-                        new JwtAuthenticationFilter(jwtTokenProvider, objectMapper),
+                        new JwtAuthenticationFilter(jwtTokenProvider, tokenBlacklist, objectMapper),
                         UsernamePasswordAuthenticationFilter.class
                 );
 

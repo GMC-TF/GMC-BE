@@ -23,6 +23,7 @@ import java.util.List;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenBlacklist tokenBlacklist;
     private final ObjectMapper objectMapper;
 
     @Override
@@ -42,7 +43,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         String token = authHeader.substring(7);
 
-        if (!jwtTokenProvider.validateToken(token)) {
+        if (!jwtTokenProvider.validateToken(token) || tokenBlacklist.isBlacklisted(token)) {
             sendErrorResponse(response, ErrorCode.UNAUTHORIZED);
             return;
         }
