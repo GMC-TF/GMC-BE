@@ -1,6 +1,8 @@
 package com.gmc.backend.auth.presentation;
 
 import com.gmc.backend.auth.jwt.JwtTokenProvider;
+import com.gmc.backend.auth.jwt.TokenBlacklist;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ class AuthControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired JwtTokenProvider jwtTokenProvider;
+    @Autowired TokenBlacklist tokenBlacklist;
 
     private static final String URL = "/api/auth/logout";
     private String validToken;
@@ -29,6 +32,11 @@ class AuthControllerTest {
     @BeforeEach
     void setUp() {
         validToken = jwtTokenProvider.generateToken("jihun@gachon.ac.kr");
+    }
+
+    @AfterEach
+    void tearDown() {
+        tokenBlacklist.clear();
     }
 
     @Test
