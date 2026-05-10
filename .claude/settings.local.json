@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/c/Users/avjab/Project/GMC/**)",
+      "Bash(./gradlew test *)"
+    ]
+  }
+}
