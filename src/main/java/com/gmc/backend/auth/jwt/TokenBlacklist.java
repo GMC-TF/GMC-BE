@@ -20,6 +20,10 @@ public class TokenBlacklist {
         return blacklisted.containsKey(token);
     }
 
+    public void clear() {
+        blacklisted.clear();
+    }
+
     @Scheduled(fixedRate = 60_000)
     public void removeExpired() {
         Date now = new Date();

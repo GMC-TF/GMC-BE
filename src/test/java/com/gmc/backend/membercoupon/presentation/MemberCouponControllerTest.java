@@ -56,7 +56,7 @@ class MemberCouponControllerTest {
         coupon = Coupon.builder()
                 .name("스타벅스 아메리카노")
                 .description("스타벅스 아메리카노 1잔")
-                .imageUrl("https://test-bucket.s3.amazonaws.com/coupon.png")
+                .imageKey("coupons/test-coupon.png")
                 .expiresAt(LocalDate.of(2026, 12, 31))
                 .build();
         couponRepository.save(coupon);
@@ -73,7 +73,7 @@ class MemberCouponControllerTest {
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.data.id").isNumber())
                 .andExpect(jsonPath("$.data.coupon.name").value("스타벅스 아메리카노"))
-                .andExpect(jsonPath("$.data.coupon.imageUrl").value("https://test-bucket.s3.amazonaws.com/coupon.png"))
+                .andExpect(jsonPath("$.data.coupon.imageKey").value("coupons/test-coupon.png"))
                 .andExpect(jsonPath("$.data.savedAt").exists());
     }
 
@@ -140,7 +140,7 @@ class MemberCouponControllerTest {
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].id").isNumber())
                 .andExpect(jsonPath("$.data[0].coupon.name").value("스타벅스 아메리카노"))
-                .andExpect(jsonPath("$.data[0].coupon.imageUrl").value("https://test-bucket.s3.amazonaws.com/coupon.png"))
+                .andExpect(jsonPath("$.data[0].coupon.imageKey").value("coupons/test-coupon.png"))
                 .andExpect(jsonPath("$.data[0].savedAt").exists());
     }
 

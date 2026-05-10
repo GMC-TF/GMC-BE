@@ -40,7 +40,8 @@ class CouponControllerTest {
     @MockitoBean S3Uploader s3Uploader;
 
     private static final String BASE_URL = "/api/coupons";
-    private static final String FAKE_IMAGE_URL = "https://test-bucket.s3.amazonaws.com/coupon.png";
+    private static final String FAKE_IMAGE_KEY = "coupons/test-coupon.png";
+    private static final String FAKE_PRESIGNED_URL = "https://test-bucket.s3.amazonaws.com/coupons/test-coupon.png?X-Amz-Signature=fake";
 
     private String validToken;
 
@@ -55,7 +56,8 @@ class CouponControllerTest {
         memberRepository.save(member);
         validToken = jwtTokenProvider.generateToken("jihun@gachon.ac.kr");
 
-        given(s3Uploader.upload(any())).willReturn(FAKE_IMAGE_URL);
+        given(s3Uploader.upload(any())).willReturn(FAKE_IMAGE_KEY);
+        given(s3Uploader.getPresignedUrl(any())).willReturn(FAKE_PRESIGNED_URL);
     }
 
     // ===== GET /api/coupons =====
@@ -77,7 +79,7 @@ class CouponControllerTest {
         couponRepository.save(Coupon.builder()
                 .name("스타벅스 아메리카노")
                 .description("스타벅스 아메리카노 1잔")
-                .imageUrl(FAKE_IMAGE_URL)
+                .imageKey(FAKE_IMAGE_KEY)
                 .expiresAt(LocalDate.of(2026, 12, 31))
                 .build());
 
@@ -88,7 +90,7 @@ class CouponControllerTest {
                 .andExpect(jsonPath("$.data").isArray())
                 .andExpect(jsonPath("$.data.length()").value(1))
                 .andExpect(jsonPath("$.data[0].name").value("스타벅스 아메리카노"))
-                .andExpect(jsonPath("$.data[0].imageUrl").value(FAKE_IMAGE_URL))
+                .andExpect(jsonPath("$.data[0].imageKey").value(FAKE_IMAGE_KEY))
                 .andExpect(jsonPath("$.data[0].expiresAt").value("2026-12-31"));
     }
 
@@ -120,7 +122,7 @@ class CouponControllerTest {
                 .andExpect(jsonPath("$.data.id").isNumber())
                 .andExpect(jsonPath("$.data.name").value("스타벅스 아메리카노"))
                 .andExpect(jsonPath("$.data.description").value("스타벅스 아메리카노 1잔"))
-                .andExpect(jsonPath("$.data.imageUrl").value(FAKE_IMAGE_URL))
+                .andExpect(jsonPath("$.data.imageKey").value(FAKE_IMAGE_KEY))
                 .andExpect(jsonPath("$.data.expiresAt").value("2026-12-31"));
     }
 
@@ -137,7 +139,7 @@ class CouponControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.status").value("success"))
                 .andExpect(jsonPath("$.data.name").value("스타벅스 아메리카노"))
-                .andExpect(jsonPath("$.data.imageUrl").value(FAKE_IMAGE_URL));
+                .andExpect(jsonPath("$.data.imageKey").value(FAKE_IMAGE_KEY));
     }
 
     @Test
@@ -171,5 +173,40 @@ class CouponControllerTest {
                         .file(image)
                         .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
                 .andExpect(status().isBadRequest());
+    }
+
+    // ===== GET /api/coupons/{couponId}/image =====
+
+    @Test
+    @DisplayName("쿠폰 이미지 다운로드 - 정상 요청 200")
+    void getImageUrl_success() throws Exception {
+        Coupon coupon = couponRepository.save(Coupon.builder()
+                .name("스타벅스 아메리카노")
+                .imageKey(FAKE_IMAGE_KEY)
+                .build());
+
+        mockMvc.perform(get(BASE_URL + "/" + coupon.getId() + "/image")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data").value(FAKE_PRESIGNED_URL));
+    }
+
+    @Test
+    @DisplayName("쿠폰 이미지 다운로드 - 존재하지 않는 쿠폰 404")
+    void getImageUrl_couponNotFound() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/999/image")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("40402"))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 쿠폰입니다."));
+    }
+
+    @Test
+    @DisplayName("쿠폰 이미지 다운로드 - 인증 없음 401")
+    void getImageUrl_noAuth() throws Exception {
+        mockMvc.perform(get(BASE_URL + "/1/image"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value("40102"));
     }
 }

@@ -1,5 +1,7 @@
 package com.gmc.backend.coupon.application;
 
+import com.gmc.backend.common.exception.CustomException;
+import com.gmc.backend.common.exception.ErrorCode;
 import com.gmc.backend.coupon.application.dto.CouponResponse;
 import com.gmc.backend.domain.coupon.Coupon;
 import com.gmc.backend.domain.coupon.CouponRepository;
@@ -36,5 +38,12 @@ public class CouponService {
                 .expiresAt(expiresAt)
                 .build();
         return CouponResponse.from(couponRepository.save(coupon));
+    }
+
+    @Transactional(readOnly = true)
+    public String getImageUrl(Long couponId) {
+        Coupon coupon = couponRepository.findById(couponId)
+                .orElseThrow(() -> new CustomException(ErrorCode.COUPON_NOT_FOUND));
+        return s3Uploader.getPresignedUrl(coupon.getImageKey());
     }
 }
