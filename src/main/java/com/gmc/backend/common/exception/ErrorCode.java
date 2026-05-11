@@ -13,6 +13,7 @@ public enum ErrorCode {
     MEMBER_NOT_FOUND("40401", "존재하지 않는 회원입니다.", HttpStatus.NOT_FOUND),
     COUPON_NOT_FOUND("40402", "존재하지 않는 쿠폰입니다.", HttpStatus.NOT_FOUND),
     COUPON_ALREADY_SAVED("40901", "이미 저장한 쿠폰입니다.", HttpStatus.CONFLICT),
+    INVALID_COUPON_QUANTITY("40001", "쿠폰 수량은 1개 이상이어야 합니다.", HttpStatus.BAD_REQUEST),
     INTERNAL_SERVER_ERROR("50001", "알 수 없는 서버 에러가 발생했습니다.(%s)", HttpStatus.INTERNAL_SERVER_ERROR);
 
     private final String status;
