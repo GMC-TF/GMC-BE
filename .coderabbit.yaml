@@ -1,0 +1,27 @@
+language: "ko-KR"
+
+reviews:
+  profile: "chill"
+  auto_review:
+    enabled: true
+    drafts: false
+  high_level_summary: true
+  collapse_walkthrough: false
+  poem: false
+
+  path_filters:
+    - "!build/**"
+    - "!.gradle/**"
+    - "!gradle/**"
+    - "!**/*.class"
+
+  instructions: |
+    이 프로젝트는 Spring Boot / Java 17 백엔드입니다. 아래 컨벤션을 기준으로 리뷰해주세요.
+
+    - 엔티티 생성은 Builder 패턴만 사용, 직접 new 금지
+    - DTO는 Java record 사용, 엔티티→DTO 변환은 from() static 메서드
+    - Service 조회 메서드는 @Transactional(readOnly = true)
+    - 예외는 CustomException(ErrorCode.XXX) 사용, 컨트롤러에서 try-catch 금지
+    - 연관관계는 FetchType.LAZY 기본
+    - 모든 API 응답은 ApiResponse<T>로 래핑
+    - 인증 필요 엔드포인트는 @AuthenticationPrincipal String email 파라미터 추가
