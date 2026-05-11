@@ -3,6 +3,7 @@ package com.gmc.backend.couponevent.presentation;
 import com.gmc.backend.common.response.ApiResponse;
 import com.gmc.backend.couponevent.application.CouponEventService;
 import com.gmc.backend.couponevent.application.dto.CouponEventResponse;
+import com.gmc.backend.couponevent.application.dto.CouponEventStatusResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/coupon-events")
@@ -20,6 +22,12 @@ import java.time.LocalDateTime;
 public class CouponEventController {
 
     private final CouponEventService couponEventService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<CouponEventStatusResponse>>> getAllEventStatus(
+            @AuthenticationPrincipal String email) {
+        return ResponseEntity.ok(ApiResponse.success(couponEventService.getAllEventStatus()));
+    }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CouponEventResponse>> createEvent(

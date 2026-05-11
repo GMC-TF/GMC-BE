@@ -1,5 +1,6 @@
 package com.gmc.backend.domain.coupon;
 
+import com.gmc.backend.domain.couponevent.CouponEvent;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -27,11 +28,15 @@ public class Coupon {
 
     private LocalDate expiresAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private CouponEvent couponEvent;
+
     @Builder
-    public Coupon(String name, String description, String imageKey, LocalDate expiresAt) {
+    public Coupon(String name, String description, String imageKey, LocalDate expiresAt, CouponEvent couponEvent) {
         this.name = name;
         this.description = description;
         this.imageKey = imageKey;
         this.expiresAt = expiresAt;
+        this.couponEvent = couponEvent;
     }
 }
