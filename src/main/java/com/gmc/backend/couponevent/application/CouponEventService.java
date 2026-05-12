@@ -72,6 +72,16 @@ public class CouponEventService {
         return CouponEventResponse.from(event, coupons.size());
     }
 
+    @Transactional
+    public void deleteEvent(Long eventId) {
+        CouponEvent event = couponEventRepository.findById(eventId)
+                .orElseThrow(() -> new CustomException(ErrorCode.COUPON_EVENT_NOT_FOUND));
+        List<Coupon> coupons = couponRepository.findAllByCouponEvent(event);
+        memberCouponRepository.deleteAll(memberCouponRepository.findAllByCouponIn(coupons));
+        couponRepository.deleteAll(coupons);
+        couponEventRepository.delete(event);
+    }
+
     @Transactional(readOnly = true)
     public List<CouponEventStatusResponse> getAllEventStatus() {
         List<CouponEvent> events = couponEventRepository.findAll();

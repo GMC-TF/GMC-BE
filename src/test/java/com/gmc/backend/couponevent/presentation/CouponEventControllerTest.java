@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.springframework.http.HttpMethod.PATCH;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -263,6 +264,39 @@ class CouponEventControllerTest {
         mockMvc.perform(multipart(PATCH, BASE_URL + "/1")
                         .param("name", "변경")
                         .param("startAt", "2026-07-01T12:00:00"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value("40102"));
+    }
+
+    // ===== DELETE /api/coupon-events/{eventId} =====
+
+    @Test
+    @DisplayName("쿠폰 이벤트 삭제 - 정상 삭제 204")
+    void deleteEvent_success() throws Exception {
+        Long eventId = createEventFixture("삭제할 이벤트", "설명", "2026-06-01T10:00:00", 3);
+
+        mockMvc.perform(delete(BASE_URL + "/" + eventId)
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isNoContent());
+
+        assertThat(couponEventRepository.findById(eventId)).isEmpty();
+        assertThat(couponRepository.count()).isZero();
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 삭제 - 존재하지 않는 이벤트 404")
+    void deleteEvent_notFound() throws Exception {
+        mockMvc.perform(delete(BASE_URL + "/99999")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("40403"))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 쿠폰 이벤트입니다."));
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 삭제 - 인증 없음 401")
+    void deleteEvent_noAuth() throws Exception {
+        mockMvc.perform(delete(BASE_URL + "/1"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("40102"));
     }

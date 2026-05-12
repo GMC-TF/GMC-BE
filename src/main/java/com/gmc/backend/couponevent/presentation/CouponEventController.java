@@ -41,6 +41,14 @@ public class CouponEventController {
         return ResponseEntity.ok(ApiResponse.success(response));
     }
 
+    @DeleteMapping("/{eventId}")
+    public ResponseEntity<Void> deleteEvent(
+            @PathVariable Long eventId,
+            @AuthenticationPrincipal String email) {
+        couponEventService.deleteEvent(eventId);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CouponEventResponse>> createEvent(
             @RequestParam String name,
