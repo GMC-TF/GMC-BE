@@ -31,4 +31,10 @@ public class CouponEvent {
         this.description = description;
         this.startAt = startAt;
     }
+
+    public void update(String name, String description, LocalDateTime startAt) {
+        this.name = name;
+        this.description = description;
+        this.startAt = startAt;
+    }
 }

@@ -39,4 +39,10 @@ public class Coupon {
         this.expiresAt = expiresAt;
         this.couponEvent = couponEvent;
     }
+
+    public void update(String name, String description, String imageKey) {
+        this.name = name;
+        this.description = description;
+        this.imageKey = imageKey;
+    }
 }

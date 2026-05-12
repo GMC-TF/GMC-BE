@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.springframework.http.HttpMethod.PATCH;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -168,6 +169,100 @@ class CouponEventControllerTest {
                         .param("name", "스타벅스 이벤트")
                         .param("startAt", "2026-06-01T10:00:00")
                         .param("quantity", "3"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.status").value("40102"));
+    }
+
+    // ===== PATCH /api/coupon-events/{eventId} =====
+
+    private Long createEventFixture(String name, String description, String startAt, int quantity) throws Exception {
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "coupon.png", "image/png", "fake-image".getBytes());
+
+        mockMvc.perform(multipart(BASE_URL)
+                        .file(image)
+                        .param("name", name)
+                        .param("description", description)
+                        .param("startAt", startAt)
+                        .param("quantity", String.valueOf(quantity))
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isCreated());
+
+        return couponEventRepository.findAll().get(0).getId();
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 수정 - 이미지 포함 정상 수정 200")
+    void updateEvent_withImage_success() throws Exception {
+        Long eventId = createEventFixture("스타벅스 이벤트", "원래 설명", "2026-06-01T10:00:00", 2);
+
+        given(s3Uploader.upload(any())).willReturn("coupons/new-image.png");
+        MockMultipartFile newImage = new MockMultipartFile(
+                "image", "new.png", "image/png", "new-image".getBytes());
+
+        mockMvc.perform(multipart(PATCH, BASE_URL + "/" + eventId)
+                        .file(newImage)
+                        .param("name", "변경된 이벤트명")
+                        .param("description", "변경된 설명")
+                        .param("startAt", "2026-07-01T12:00:00")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.name").value("변경된 이벤트명"))
+                .andExpect(jsonPath("$.data.description").value("변경된 설명"))
+                .andExpect(jsonPath("$.data.startAt").value("2026-07-01T12:00:00"))
+                .andExpect(jsonPath("$.data.couponCount").value(2));
+
+        assertThat(couponRepository.findAll())
+                .allMatch(c -> c.getName().equals("변경된 이벤트명") && c.getImageKey().equals("coupons/new-image.png"));
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 수정 - 이미지 미포함 정상 수정 200")
+    void updateEvent_withoutImage_success() throws Exception {
+        Long eventId = createEventFixture("스타벅스 이벤트", "원래 설명", "2026-06-01T10:00:00", 1);
+
+        mockMvc.perform(multipart(PATCH, BASE_URL + "/" + eventId)
+                        .param("name", "이름만 변경")
+                        .param("startAt", "2026-08-01T09:00:00")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("success"))
+                .andExpect(jsonPath("$.data.name").value("이름만 변경"))
+                .andExpect(jsonPath("$.data.startAt").value("2026-08-01T09:00:00"));
+
+        assertThat(couponRepository.findAll().get(0).getImageKey()).isEqualTo(FAKE_IMAGE_KEY);
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 수정 - 존재하지 않는 이벤트 404")
+    void updateEvent_notFound() throws Exception {
+        mockMvc.perform(multipart(PATCH, BASE_URL + "/99999")
+                        .param("name", "변경")
+                        .param("startAt", "2026-07-01T12:00:00")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value("40403"))
+                .andExpect(jsonPath("$.message").value("존재하지 않는 쿠폰 이벤트입니다."));
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 수정 - 이벤트명 없음 400")
+    void updateEvent_missingName() throws Exception {
+        Long eventId = createEventFixture("스타벅스 이벤트", "설명", "2026-06-01T10:00:00", 1);
+
+        mockMvc.perform(multipart(PATCH, BASE_URL + "/" + eventId)
+                        .param("startAt", "2026-07-01T12:00:00")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + validToken))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("쿠폰 이벤트 수정 - 인증 없음 401")
+    void updateEvent_noAuth() throws Exception {
+        mockMvc.perform(multipart(PATCH, BASE_URL + "/1")
+                        .param("name", "변경")
+                        .param("startAt", "2026-07-01T12:00:00"))
                 .andExpect(status().isUnauthorized())
                 .andExpect(jsonPath("$.status").value("40102"));
     }

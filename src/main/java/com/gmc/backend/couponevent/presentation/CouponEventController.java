@@ -29,6 +29,18 @@ public class CouponEventController {
         return ResponseEntity.ok(ApiResponse.success(couponEventService.getAllEventStatus()));
     }
 
+    @PatchMapping(value = "/{eventId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<ApiResponse<CouponEventResponse>> updateEvent(
+            @PathVariable Long eventId,
+            @RequestParam String name,
+            @RequestParam(required = false) String description,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startAt,
+            @RequestParam(required = false) MultipartFile image,
+            @AuthenticationPrincipal String email) {
+        CouponEventResponse response = couponEventService.updateEvent(eventId, name, description, startAt, image);
+        return ResponseEntity.ok(ApiResponse.success(response));
+    }
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiResponse<CouponEventResponse>> createEvent(
             @RequestParam String name,

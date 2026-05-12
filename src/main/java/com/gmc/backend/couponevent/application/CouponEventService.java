@@ -57,6 +57,21 @@ public class CouponEventService {
         return CouponEventResponse.from(event, quantity);
     }
 
+    @Transactional
+    public CouponEventResponse updateEvent(Long eventId, String name, String description,
+                                           LocalDateTime startAt, MultipartFile image) {
+        CouponEvent event = couponEventRepository.findById(eventId)
+                .orElseThrow(() -> new CustomException(ErrorCode.COUPON_EVENT_NOT_FOUND));
+
+        event.update(name, description, startAt);
+
+        List<Coupon> coupons = couponRepository.findAllByCouponEvent(event);
+        String imageKey = image != null ? s3Uploader.upload(image) : coupons.isEmpty() ? null : coupons.get(0).getImageKey();
+        coupons.forEach(coupon -> coupon.update(name, description, imageKey));
+
+        return CouponEventResponse.from(event, coupons.size());
+    }
+
     @Transactional(readOnly = true)
     public List<CouponEventStatusResponse> getAllEventStatus() {
         List<CouponEvent> events = couponEventRepository.findAll();
